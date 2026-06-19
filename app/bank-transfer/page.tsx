@@ -1,335 +1,143 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Sidebar from '@/components/sidebar'
+import { ChevronLeft } from '@/components/Icons'
 
-type Errors = Partial<{
-  amount: string
-  accountNumber: string
-  accountName: string
-  bank: string
-}>
+type Errors = {
+  name?: string
+  accountNumber?: string
+  amount?: string
+  bank?: string
+}
 
-export default function Home() {
-  const [amount, setAmount] = useState('')
-  const [accountNumber, setAccountNumber] = useState('')
-  const [accountName, setAccountName] = useState('')
-  const [bank, setBank] = useState('')
-  const [description, setDescription] = useState('')
+export default function BankTransfer() {
+  const [formData, setFormData] = useState({
+    name: '',
+    accountNumber: '',
+    amount: '',
+    bank: '',
+    remark: ''
+  })
+  
   const [errors, setErrors] = useState<Errors>({})
-  const [step, setStep] = useState<'form' | 'confirm' | 'success' | 'failure'>(
-    'form'
-  )
-  const [confirmation, setConfirmation] = useState<string | null>(null)
+  const [step, setStep] = useState<'form' | 'success' | 'failed'>('form')
 
-  function validate() {
-    const e: Errors = {}
-    if (!amount) e.amount = 'Amount is required'
-    else if (Number(amount) <= 0 || isNaN(Number(amount)))
-      e.amount = 'Enter a valid positive amount'
-
-    if (!accountNumber) e.accountNumber = 'Account number is required'
-    else if (!/^\d{6,}$/.test(accountNumber))
-      e.accountNumber = 'Enter a valid account number'
-
-    if (!accountName) e.accountName = 'Account name is required'
-
-    if (!bank) e.bank = 'Select a bank'
-
-    setErrors(e)
-    return Object.keys(e).length === 0
+  const validate = () => {
+    const newErrors: Errors = {}
+    if (!formData.name) newErrors.name = 'Recipient name is required'
+    if (!formData.accountNumber || formData.accountNumber.length < 8) 
+      newErrors.accountNumber = 'Enter a valid account number'
+    if (!formData.amount || parseFloat(formData.amount) <= 0) 
+      newErrors.amount = 'Enter a valid amount'
+    if (!formData.bank) newErrors.bank = 'Please select a bank'
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  function handleNext(e: React.FormEvent) {
-    e.preventDefault()
-    if (validate()) {
-      // show confirmation step first
-      setStep('confirm')
+  const handleTransfer = () => {
+    if (!validate()) return
+
+    const amountVal = parseFloat(formData.amount)
+    const saved = localStorage.getItem('userBalance') || '180000.00'
+    const currentBalance = parseFloat(saved)
+
+    if (amountVal <= currentBalance) {
+      localStorage.setItem('userBalance', (currentBalance - amountVal).toString())
+      
+      const oldTxs = JSON.parse(localStorage.getItem('userTransactions') || '[]')
+      const newTx = { 
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+        account: formData.name, 
+        amount: amountVal, 
+        status: 'Success' 
+      }
+      localStorage.setItem('userTransactions', JSON.stringify([newTx, ...oldTxs]))
+      
+      window.dispatchEvent(new Event('storage'))
+      setStep('success')
+    } else {
+      setStep('failed')
     }
   }
 
-  function handleTransfer(e: React.FormEvent) {
-    e.preventDefault()
-    // simulate transfer completion and show success page
-    const conf = String(Math.floor(10000000 + Math.random() * 89999999))
-    setConfirmation(conf)
-    setStep('success' as any)
-  }
-
   return (
-    <div className="min-h-screen bg-bg-light font-geist p-0">
-      <div className="flex min-h-screen">
-        <Sidebar />
-
-        <main className="flex-1 p-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold">Bank Transfer</h2>
-            <div className="flex items-center gap-3">
-              <button className="topbar-icon" aria-label="search">
-                <img src="/search.png" alt="search" />
-              </button>
-              <button className="topbar-icon" aria-label="notifications">
-                <img src="/notification.png" alt="notifications" />
-              </button>
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
-                <img
-                  src="/avatar.png"
-                  alt="avatar"
-                  className="w-full h-full object-cover bg-white"
-                />
-              </div>
-            </div>
-          </div>
-          {step === 'form' ? (
-            <form onSubmit={handleNext} className="transfer-card p-8">
-              <div className="grid grid-cols-12 gap-y-6 gap-x-8 items-center">
-                <label className="col-span-3 text-gray-700">Amount :</label>
-                <div className="col-span-9">
-                  <input
-                    aria-label="amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="underline-input"
-                    placeholder=""
-                  />
-                  {errors.amount && (
-                    <div className="text-sm text-red-600 mt-1">
-                      {errors.amount}
-                    </div>
-                  )}
+    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
+      <Sidebar />
+      <main className="flex-1 p-8 md:p-12 flex justify-center items-start">
+        
+        <div className="w-full max-w-lg bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+          {step === 'form' && (
+            <>
+              <h1 className="text-2xl font-bold mb-6">Bank Transfer</h1>
+              <div className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-600">Recipient Name</label>
+                  <input className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 mt-1" 
+                         value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                  {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
                 </div>
 
-                <label className="col-span-3 text-gray-700">
-                  Account Number :
-                </label>
-                <div className="col-span-9">
-                  <input
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    className="underline-input"
-                  />
-                  {errors.accountNumber && (
-                    <div className="text-sm text-red-600 mt-1">
-                      {errors.accountNumber}
-                    </div>
-                  )}
+                {/* Account Number */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-600">Account Number</label>
+                  <input className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 mt-1" 
+                         value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})} />
+                  {errors.accountNumber && <p className="text-rose-500 text-xs mt-1">{errors.accountNumber}</p>}
                 </div>
 
-                <label className="col-span-3 text-gray-700">
-                  Account Name :
-                </label>
-                <div className="col-span-9">
-                  <input
-                    value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
-                    className="underline-input"
-                  />
-                  {errors.accountName && (
-                    <div className="text-sm text-red-600 mt-1">
-                      {errors.accountName}
-                    </div>
-                  )}
-                </div>
-
-                <label className="col-span-3 text-gray-700">
-                  Select Bank :
-                </label>
-                <div className="col-span-9">
-                  <select
-                    value={bank}
-                    onChange={(e) => setBank(e.target.value)}
-                    className="underline-input bg-transparent"
-                  >
-                    <option value="">Choose bank</option>
-                    <option>First National</option>
-                    <option>Global Trust</option>
-                    <option>Union Bank</option>
+                {/* Bank Select */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-600">Select Bank</label>
+                  <select className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 mt-1"
+                          value={formData.bank} onChange={(e) => setFormData({...formData, bank: e.target.value})}>
+                    <option value="">Select Bank</option>
+                    <option value="BOC">Bank of Ceylon</option>
+                    <option value="Sampath">Sampath Bank</option>
+                    <option value="Commercial">Commercial Bank</option>
                   </select>
-                  {errors.bank && (
-                    <div className="text-sm text-red-600 mt-1">
-                      {errors.bank}
-                    </div>
-                  )}
+                  {errors.bank && <p className="text-rose-500 text-xs mt-1">{errors.bank}</p>}
                 </div>
 
-                <label className="col-span-3 text-gray-700">
-                  Description :
-                </label>
-                <div className="col-span-9">
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    className="description-box"
-                  />
+                {/* Amount */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-600">Amount (Rs.)</label>
+                  <input type="number" className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 mt-1" 
+                         value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} />
+                  {errors.amount && <p className="text-rose-500 text-xs mt-1">{errors.amount}</p>}
                 </div>
-              </div>
 
-              <div className="flex justify-center mt-10">
-                <button type="submit" className="next-btn">
-                  NEXT
+                {/* Remark */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-600">Remark</label>
+                  <input className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 mt-1" 
+                         value={formData.remark} onChange={(e) => setFormData({...formData, remark: e.target.value})} />
+                </div>
+
+                <button onClick={handleTransfer} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl mt-4 transition-all">
+                  Confirm Transfer
                 </button>
               </div>
-            </form>
-          ) : step === 'confirm' ? (
-            <div className="transfer-card p-8">
-              <h3 className="text-center text-2xl font-semibold mb-6">
-                Confirm Transfer
-              </h3>
-              <div className="bg-white rounded-lg p-6 shadow-lg max-w-xl mx-auto text-center">
-                <p className="mb-4">
-                  Confirm your transfer of <strong>Rs. {amount || '0'}</strong>{' '}
-                  to <strong>{accountName || 'recipient'}</strong>
-                </p>
-                <p className="text-sm text-gray-600 mb-6">
-                  Additional fee of Rs.50 will be charged.
-                </p>
-                <div className="mb-6">
-                  <img
-                    src="/transfer-illustration.png"
-                    alt="illustration"
-                    className="mx-auto"
-                  />
-                </div>
-                <div className="flex justify-center gap-4">
-                  <button
-                    onClick={() => setStep('failure')}
-                    className="next-btn"
-                    aria-label="back"
-                  >
-                    BACK
-                  </button>
-                  <button
-                    onClick={handleTransfer}
-                    className="next-btn transfer-btn"
-                  >
-                    TRANSFER
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : step === 'success' ? (
-            // success page
-            <div className="transfer-card p-8">
-              <div className="relative">
-                <div className="success-check inside-check">
-                  <svg
-                    viewBox="0 0 120 120"
-                    width="100"
-                    height="100"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <radialGradient id="g" cx="50%" cy="50%">
-                        <stop offset="0%" stopColor="#28a745" />
-                        <stop offset="100%" stopColor="#138a3e" />
-                      </radialGradient>
-                    </defs>
-                    <circle cx="60" cy="60" r="50" fill="#dff7e7" />
-                    <circle cx="60" cy="60" r="40" fill="#10a654" />
-                    <path
-                      d="M38 62 L54 78 L82 42"
-                      stroke="#fff"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                  </svg>
-                </div>
+            </>
+          )}
 
-                <h3 className="text-center text-2xl font-semibold mb-4">
-                  Transfer Successful!
-                </h3>
-                <p className="text-center text-sm text-gray-500 mb-10">
-                  Confirmation number : {confirmation}
-                </p>
-
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      // go back to home (reset form)
-                      setAmount('')
-                      setAccountNumber('')
-                      setAccountName('')
-                      setBank('')
-                      setDescription('')
-                      setErrors({})
-                      setConfirmation(null)
-                      setStep('form')
-                    }}
-                    className="transfer-btn success-btn"
-                  >
-                    <span className="mr-3">‹</span> BACK TO HOME
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // failure page
-            <div className="transfer-card p-8">
-              <div className="relative">
-                <div className="success-check inside-check">
-                  <svg
-                    viewBox="0 0 120 120"
-                    width="220"
-                    height="220"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle cx="60" cy="60" r="50" fill="#ffdede" />
-                    <circle cx="60" cy="60" r="40" fill="#ffb6b6" />
-                    <path
-                      d="M60 30 L93 86 L27 86 Z"
-                      fill="#ff4d4f"
-                      stroke="#fff"
-                      strokeWidth="4"
-                      strokeLinejoin="round"
-                    />
-                    <text
-                      x="60"
-                      y="78"
-                      textAnchor="middle"
-                      fontSize="36"
-                      fill="#fff"
-                      fontWeight="700"
-                    >
-                      !
-                    </text>
-                  </svg>
-                </div>
-
-                <h3 className="text-center text-2xl font-semibold mb-4">
-                  Transaction Failed!
-                </h3>
-                <p className="text-center text-sm text-gray-500 mb-6">
-                  Insufficient Balance
-                  <br />
-                  Current Balance is: Rs.500
-                </p>
-
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      setAmount('')
-                      setAccountNumber('')
-                      setAccountName('')
-                      setBank('')
-                      setDescription('')
-                      setErrors({})
-                      setConfirmation(null)
-                      setStep('form')
-                    }}
-                    className="transfer-btn success-btn"
-                  >
-                    <span className="mr-3">‹</span> BACK TO HOME
-                  </button>
-                </div>
-              </div>
+          {/* Success/Failed Screens as defined before... */}
+          {step === 'success' && (
+            <div className="text-center py-10">
+              <h2 className="text-2xl font-bold mb-2">Transfer Successful!</h2>
+              <button onClick={() => setStep('form')} className="mt-6 text-indigo-600 font-bold">Back to Home</button>
             </div>
           )}
-        </main>
-      </div>
+          {step === 'failed' && (
+            <div className="text-center py-10">
+              <h2 className="text-2xl font-bold mb-2 text-rose-500">Transfer Failed!</h2>
+              <button onClick={() => setStep('form')} className="mt-6 bg-slate-900 text-white py-3 px-8 rounded-xl font-bold">Try Again</button>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   )
 }

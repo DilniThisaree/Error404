@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-// Minimal icon components to avoid external dependency
 type IconProps = { size?: number }
+
 const LayoutGrid = ({ size = 18 }: IconProps) => (
   <svg
     width={size}
@@ -13,48 +13,19 @@ const LayoutGrid = ({ size = 18 }: IconProps) => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <rect
-      x="3"
-      y="3"
-      width="8"
-      height="8"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-    <rect
-      x="13"
-      y="3"
-      width="8"
-      height="8"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-    <rect
-      x="3"
-      y="13"
-      width="8"
-      height="8"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-    <rect
-      x="13"
-      y="13"
-      width="8"
-      height="8"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
+    <rect x="3" y="3" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="13" y="3" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="3" y="13" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="13" y="13" width="8" height="8" stroke="currentColor" strokeWidth="1.5" />
   </svg>
 )
 
-const Settings = ({ size = 24 }: IconProps) => (
+const Settings = ({ size = 22 }: IconProps) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
   >
     <path
       d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z"
@@ -69,13 +40,12 @@ const Settings = ({ size = 24 }: IconProps) => (
   </svg>
 )
 
-const HelpCircle = ({ size = 24 }: IconProps) => (
+const HelpCircle = ({ size = 22 }: IconProps) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
     <path
@@ -97,32 +67,69 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   const menuItems = [
-    { label: 'DASHBOARD', path: '/dashboard' },
-    { label: 'ACCOUNTS', path: '/bank-accounts' },
-    { label: 'BANK TRANSFER', path: '/bank-transfer' },
-    { label: 'PAY BILLS', path: '/pay-bills' },
-    { label: 'SMART SPEND', path: '/smart-spend' },
-    { label: 'E-STATEMENT', path: '/e-statement' }
+    {
+      label: 'DASHBOARD',
+      path: '/dashboard',
+      icon: <LayoutGrid size={18} />
+    },
+    {
+      label: 'ACCOUNTS',
+      path: '/bank-accounts',
+      icon: '🏦'
+    },
+    {
+      label: 'BANK TRANSFER',
+      path: '/bank-transfer',
+      icon: '💸'
+    },
+    {
+      label: 'PAY BILLS',
+      path: '/pay-bills',
+      icon: '📄'
+    },
+    {
+      label: 'SMART SPEND',
+      path: '/smart-spend',
+      icon: '📊'
+    },
+    {
+      label: 'E-STATEMENT',
+      path: '/e-statement',
+      icon: '📑'
+    }
   ]
 
   return (
     <aside className="sidebar">
       <div className="sidebar-top">
-        {/* Logo */}
+
         <div className="logo-wrapper">
-          <img src="/loginlogo.png" alt="logo" className="logo-img" />
-          <h1 className="brand-name">NOVA BANK</h1>
+          <img
+            src="/loginlogo.png"
+            alt="Nova Bank"
+            className="logo-img"
+          />
+          <div>
+            <h1 className="brand-name">NOVA BANK</h1>
+            <p className="brand-subtitle">Digital Banking</p>
+          </div>
         </div>
 
-        {/* Menu */}
         <nav className="menu">
           {menuItems.map((item) => {
             const isActive = pathname === item.path
+
             return (
-              <Link key={item.label} href={item.path} className="menu-link">
-                <button className={`menu-item ${isActive ? 'active' : ''}`}>
-                  {item.label === 'DASHBOARD' && <LayoutGrid size={18} />}
-                  {item.label}
+              <Link
+                key={item.label}
+                href={item.path}
+                className="menu-link"
+              >
+                <button
+                  className={`menu-item ${isActive ? 'active' : ''}`}
+                >
+                  <span className="menu-icon">{item.icon}</span>
+                  <span>{item.label}</span>
                 </button>
               </Link>
             )
@@ -131,19 +138,30 @@ export default function Sidebar() {
       </div>
 
       <div className="sidebar-footer">
-        <Settings size={24} />
-        <HelpCircle size={24} />
+        <div className="footer-btn">
+          <Settings />
+        </div>
+
+        <div className="footer-btn">
+          <HelpCircle />
+        </div>
       </div>
 
       <style jsx>{`
         .sidebar {
-          width: 250px;
-          background: #450043;
+          width: 280px;
+          min-height: 100vh;
+          background: linear-gradient(
+            180deg,
+            #0f172a 0%,
+            #172554 50%,
+            #1e3a8a 100%
+          );
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          border-radius: 0 25px 25px 0;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
           flex-shrink: 0;
         }
 
@@ -155,31 +173,40 @@ export default function Sidebar() {
         .logo-wrapper {
           display: flex;
           align-items: center;
-          gap: 1rem;
-          padding: 1rem 0.75rem;
+          gap: 14px;
+          padding: 28px 24px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .logo-img {
-          width: 75px;
-          height: 75px;
-          border-radius: 50%;
-          background: white;
+          width: 60px;
+          height: 60px;
+          border-radius: 16px;
           object-fit: cover;
+          background: white;
+          padding: 4px;
         }
 
         .brand-name {
           color: white;
-          font-size: 18px;
+          font-size: 20px;
           font-weight: 800;
-          letter-spacing: 0.5px;
+          margin: 0;
+          letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+          color: rgba(255, 255, 255, 0.65);
+          font-size: 12px;
+          margin-top: 4px;
         }
 
         .menu {
-          margin-top: 3rem;
-          padding: 0 1rem;
+          margin-top: 24px;
+          padding: 0 16px;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 8px;
         }
 
         .menu-link {
@@ -187,101 +214,84 @@ export default function Sidebar() {
         }
 
         .menu-item {
-          height: 50px;
+          width: 100%;
+          height: 54px;
           border: none;
           background: transparent;
-          color: white;
-          text-align: left;
-          padding: 0 1.5rem;
-          border-radius: 25px;
-          transition: all 0.3s;
-          font-weight: 600;
-          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.75);
+          border-radius: 14px;
+          padding: 0 18px;
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 12px;
+          font-size: 14px;
+          font-weight: 600;
+          letter-spacing: 0.3px;
           cursor: pointer;
-          width: 100%;
+          transition: all 0.25s ease;
         }
 
-        .menu-item.active {
-          background: #9a5c97;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .menu-icon {
+          width: 22px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-size: 18px;
         }
 
         .menu-item:hover {
-          background: #9a5c97;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          background: rgba(255, 255, 255, 0.08);
+          color: white;
+          transform: translateX(5px);
+        }
+
+        .menu-item.active {
+          background: white;
+          color: #1e3a8a;
+          font-weight: 700;
+          box-shadow: 0 12px 24px rgba(255, 255, 255, 0.15);
         }
 
         .sidebar-footer {
           display: flex;
-          gap: 1.5rem;
-          padding: 1.5rem;
+          justify-content: center;
+          gap: 12px;
+          padding: 24px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .footer-btn {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
           color: white;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+
+        .footer-btn:hover {
+          background: white;
+          color: #1e3a8a;
+          transform: translateY(-3px);
         }
 
         @media (max-width: 768px) {
           .sidebar {
             width: 100%;
-            border-radius: 0 0 25px 25px;
-            flex-direction: row;
-            flex-wrap: wrap;
-            padding: 0.75rem 1rem;
-            align-items: center;
+            min-height: auto;
           }
 
-          .sidebar-top {
-            flex-direction: row;
-            align-items: center;
-            gap: 1rem;
-            flex: 1;
-          }
-
-          .logo-wrapper {
-            padding: 0;
-          }
-          .logo-img {
-            width: 50px;
-            height: 50px;
-          }
-          .brand-name {
-            font-size: 16px;
-          }
-
-          .menu {
-            flex-direction: row;
-            flex-wrap: wrap;
-            margin-top: 0;
-            padding: 0;
-            gap: 0.5rem;
-          }
           .menu-item {
-            padding: 0 1rem;
-            height: 40px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            width: auto;
+            height: 48px;
+            font-size: 13px;
           }
 
-          .sidebar-footer {
-            padding: 0;
-            gap: 1rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .menu-item {
-            font-size: 0.7rem;
-            padding: 0 0.75rem;
-            height: 34px;
-          }
           .brand-name {
-            font-size: 14px;
-          }
-          .logo-img {
-            width: 40px;
-            height: 40px;
+            font-size: 17px;
           }
         }
       `}</style>

@@ -72,7 +72,7 @@ INSERT INTO transactions (from_account, to_account, amount, description, created
 ON CONFLICT DO NOTHING;
 `
 
-export async function runStatement(sql: string) {
+export async function runStatement(sql: string, p0: number[]) {
   await ensureDatabase()
   console.log('[bank-sql]', sql)
   return pool.query(sql)

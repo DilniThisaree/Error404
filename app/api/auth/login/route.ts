@@ -1,62 +1,25 @@
-import { asText, runStatement, serviceFailure } from '@/lib/platform-db'
-
-export async function GET() {
-  try {
-    const result = await runStatement(
-      'SELECT id, username, password, role, full_name, nic, email FROM users ORDER BY id'
-    )
-
-    return Response.json({
-      ok: true,
-      note: 'Login reference data.',
-      users: result.rows
-    })
-  } catch (reason) {
-    return serviceFailure(reason)
-  }
-}
+import { runStatement, serviceFailure } from '@/lib/platform-db'
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}))
-    const username = asText(body.username)
-    const password = asText(body.password)
+    const body = await request.json()
+    const { email, password } = body
 
-    const sql = `
-      SELECT id, username, role, full_name, email
-      FROM users
-      WHERE username = '${username}' AND password = '${password}'
-      LIMIT 1
-    `
-    const result = await runStatement(sql)
+    if (!email || !password) {
+      return Response.json({ ok: false, error: 'Email and password are required' }, { status: 400 })
+    }
 
-    if (!result.rows[0]) {
-      return Response.json(
-        {
-          ok: false,
-          message: 'Invalid login.',
-          sql
-        },
-        { status: 401 }
-      )
+    const sql = `SELECT id, full_name, email FROM users WHERE email = ? AND password = ?`
+    const result = await runStatement(sql, [email, password])
+
+    if (result.rows.length === 0) {
+      return Response.json({ ok: false, error: 'Invalid email or password' }, { status: 401 })
     }
 
     const user = result.rows[0]
-    const headers = new Headers()
-    headers.append('set-cookie', `user_id=${user.id}; Path=/; SameSite=Lax`)
-    headers.append('set-cookie', `role=${user.role}; Path=/; SameSite=Lax`)
-
-    return Response.json(
-      {
-        ok: true,
-        token: Buffer.from(`${user.id}:${user.role}:session-token`).toString(
-          'base64'
-        ),
-        user,
-        sql
-      },
-      { headers }
-    )
+    
+    // මෙහිදී සාමාන්‍යයෙන් JWT Token එකක් හෝ Session එකක් හදලා යවනවා
+    return Response.json({ ok: true, message: 'Login successful', user })
   } catch (reason) {
     return serviceFailure(reason)
   }

@@ -69,7 +69,7 @@ export default function LoginPage() {
 
           <div className="mt-3 text-right">
             <Link
-              href="/reset-password"
+              href="accounts/reset-password"
               className="text-sm font-bold text-black"
             >
               Forgot password?
